@@ -59,6 +59,9 @@ dataset = load_images_from_folder(DATADIR, 10) #Va chercher les images array RGB
 
 x_train , y_train = create_training_data(dataset) #Va chercher les donnes necessaire pour l'entrainement machine avec les images convertit en YUV
 
+cv2.imshow("original", dataset[5]) #Montre le resultat du color Y de l'image specifique
+
+
 cv2.imshow("Y", x_train[5]) #Montre le resultat du color Y de l'image specifique
 
 u, v = cv2.split(y_train[5]) #Separe le y_train qui contient les valeurs U et V en les color channel U et V respective
