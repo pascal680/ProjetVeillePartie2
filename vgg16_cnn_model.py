@@ -34,8 +34,6 @@ model.add(Conv2D(256, kernel_size=(3, 3), strides=(1, 1), padding='same', activa
 model.add(Conv2D(512, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu'))
 # Applies filter on the image in squares of 3x3 matrices and adding it all up with an activation function to reinforce patterns
 
-# flatten output of conv
-model.add(Flatten())  # Flattens all tensor with all the
 
 # output layer
 model.add(Conv2D(2, kernel_size=(3, 3), padding="same", strides=(1, 1), activation='softmax'))
@@ -44,6 +42,6 @@ model.add(Conv2D(2, kernel_size=(3, 3), padding="same", strides=(1, 1), activati
 # compiling the sequential model
 model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
 
-model.fit(X, Y, batch_size=32, epochs=20, validation_split=0.1)
+model.fit(X, Y, batch_size=64, epochs=20, validation_split=0.1)
 
 model.save('colorization_cnn.model')

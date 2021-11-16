@@ -1,7 +1,8 @@
 import os
 import cv2
+import numpy as np
 
-DATADIR = "B:/SCHOOL/AL/sem_9/veille_techno/partie2/dataset/mirflickr"
+DATADIR = "B:/SCHOOL/AL/sem_9/veille_techno/partie2/dataset/nature_images/train"
 
 def load_images_from_folder(directory, max_count = -1): #Va chercher les images du dataset et les convertit en image array rgb
 
@@ -42,48 +43,33 @@ def create_training_data(images):   #Convertit la liste des images array au list
 
         img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)  #Convertit les images array RGB a des images arrays YUV
 
-        y, u, v = cv2.split(img_yuv)    #Separe les colors channel YUV en valeur separe
+        img_yuv = img_yuv[0:256, 0:256]
 
-        x_train.append(y) #Ajoute la color channel de luminosite au tableau de valeur input pour l'entrainement
+        img_yuv = img_yuv.astype(np.float32)
+        img_yuv /= 255.0
 
-        y_train.append(cv2.merge((u,v))) #Ajoute les autres color channel, ceux qui definisse la couleur dans le tableau de label
+        y, u, v = cv2.split(img_yuv) # Separe les colors channel YUV en valeur separe
 
-    return x_train, y_train #Retourne les deux listes necessaire pour l'entrainement
+        x_train.append(y) # Ajoute la color channel de luminosite au tableau de valeur input pour l'entrainement
+
+        y_train.append(img_yuv) # Ajoute les autres color channel, ceux qui definisse la couleur dans le tableau de label
+
+    return np.array(x_train).reshape((len(images), 256, 256, 1)), np.array(y_train).reshape((len(images), 256, 256, 3)) # Retourne les deux listes necessaire pour l'entrainement
 
 
 
-
-
-
-dataset = load_images_from_folder(DATADIR, 10) #Va chercher les images array RGB et les garde dans une variable dataset
+dataset = load_images_from_folder(DATADIR, 924) #Va chercher les images array RGB et les garde dans une variable dataset
 
 x_train , y_train = create_training_data(dataset) #Va chercher les donnes necessaire pour l'entrainement machine avec les images convertit en YUV
 
-cv2.imshow("original", dataset[5]) #Montre le resultat du color Y de l'image specifique
+cv2.imshow("Image", y_train[5].reshape((256, 256, 3))) #Montre le resultat du color Y de l'image specifique
+
+cv2.imshow("Y", x_train[5].reshape((256,256))) #Montre le resultat du color Y de l'image specifique
+
+cv2.waitKey(0) # Permet de continuer le script sur la fermeture des onglets imshow
 
 
-cv2.imshow("Y", x_train[5]) #Montre le resultat du color Y de l'image specifique
-
-u, v = cv2.split(y_train[5]) #Separe le y_train qui contient les valeurs U et V en les color channel U et V respective
-
-cv2.imshow("u", u) #Montre le resultat du color U de l'image specifique
-
-cv2.imshow("V", v) #Montre le resultat du color V de l'image specifique
-
-
-cv2.waitKey(0) #Permet de continuer le script sur la fermeture des onglets imshow
-
-
-print(len(dataset))   #Imprime la longueur du dataset pour verifier
-
-print(len(x_train))   #Imprime la longueur du x_train pour verifier
-
-print(len(y_train))   #Imprime la longueur du y_train pour verifier
-
-
-
-
-import pickle  #Utilise pickle pour sauvegarder notre dataset en tant que les liste necessaire pour l'entrainement
+import pickle  # Utilise pickle pour sauvegarder notre dataset en tant que les liste necessaire pour l'entrainement
 
 pickle_out = open("X.pickle", "wb")
 
