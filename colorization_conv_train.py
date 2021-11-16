@@ -83,6 +83,9 @@ model.fit(train_dataset,
     epochs=5)
 
 
+model.save("model/attempt_colorization1.model")
+
+
 #model.load()
 img = cv2.imread("./00000115.jpg")
 #file = tf.io.read_file("B:\\SCHOOL\\AL\\sem_9\\veille_techno\\partie2\\dataset\\natureimages\\train\\00000114(6).jpg")
