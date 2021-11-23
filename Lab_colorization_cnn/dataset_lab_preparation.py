@@ -69,7 +69,7 @@ def rgb_to_lab(list_images):
 
 
 
-images = load_images_from_folder(DATADIR, 60)
+images = load_images_from_folder(DATADIR, 256)
 print(len(images))
 x_train, y_train = rgb_to_lab(images)
 
