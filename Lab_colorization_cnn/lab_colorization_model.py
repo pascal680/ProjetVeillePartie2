@@ -1,5 +1,8 @@
 import tensorflow as tf
+from keras import Input
+from keras.layers import Conv2D, LeakyReLU, BatchNormalization, MaxPooling2D, UpSampling2D, Dropout
 from keras.optimizer_v2.adam import Adam
+from numpy import concatenate
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
@@ -15,9 +18,9 @@ X = np.array(X).reshape((-1, RESOLUTION, RESOLUTION, 1))
 Y = pickle.load(open("Y.pickle", "rb"))
 Y = np.array(Y).reshape((-1, RESOLUTION, RESOLUTION, 2))
 
-depth = 10
-epochs = 3
-batch_size = 6
+depth = 12
+epochs = 50
+batch_size = 10
 
 
 
@@ -42,18 +45,78 @@ def colorizer_model(depth=8):
     model.add(layers.Conv2D(2, 1, padding='same', activation='tanh', use_bias=False))
 
     return model
-    # x = layers.Conv2D(filters=2, activation='tanh', kernel_size=(3, 3), strides=(1, 1), padding='same', use_bias=False)(x)
 
-model = colorizer_model(depth)
+
+
+
+
+def InstantiateModel(in_):
+    model_ = Conv2D(16, (3, 3), padding='same', strides=1)(in_)
+    model_ = LeakyReLU()(model_)
+    # model_ = Conv2D(64,(3,3), activation='relu',strides=1)(model_)
+    model_ = Conv2D(32, (3, 3), padding='same', strides=1)(model_)
+    model_ = LeakyReLU()(model_)
+    # model_ = BatchNormalization()(model_)
+    model_ = MaxPooling2D(pool_size=(2, 2), padding='same')(model_)
+
+    model_ = Conv2D(64, (3, 3), padding='same', strides=1)(model_)
+    model_ = LeakyReLU()(model_)
+    # model_ = BatchNormalization()(model_)
+    model_ = MaxPooling2D(pool_size=(2, 2), padding='same')(model_)
+
+    model_ = Conv2D(128, (3, 3), padding='same', strides=1)(model_)
+    model_ = LeakyReLU()(model_)
+    # model_ = BatchNormalization()(model_)
+
+    model_ = Conv2D(256, (3, 3), padding='same', strides=1)(model_)
+    model_ = LeakyReLU()(model_)
+    # model_ = BatchNormalization()(model_)
+
+    model_ = UpSampling2D((2, 2))(model_)
+    model_ = Conv2D(128, (3, 3), padding='same', strides=1)(model_)
+    model_ = LeakyReLU()(model_)
+    # model_ = BatchNormalization()(model_)
+
+    model_ = UpSampling2D((2, 2))(model_)
+    model_ = Conv2D(64, (3, 3), padding='same', strides=1)(model_)
+    model_ = LeakyReLU()(model_)
+    # model_ = BatchNormalization()(model_)
+
+    # concat_ = concatenate([model_, in_])
+
+    model_ = Conv2D(64, (3, 3), padding='same', strides=1)(model_)
+    model_ = LeakyReLU()(model_)
+    # model_ = BatchNormalization()(model_)
+
+
+    model_ = Conv2D(32, (3, 3), padding='same', strides=1)(model_)
+    model_ = LeakyReLU()(model_)
+    # model_ = BatchNormalization()(model_)
+
+    model_ = Conv2D(2,1, activation='tanh', padding='same', strides=1)(model_)
+
+    return model_
+
+# model = colorizer_model(depth)
+
+Input_Sample = Input(shape=(RESOLUTION, RESOLUTION,1))
+Output_ = InstantiateModel(Input_Sample)
+model = Model(inputs=Input_Sample, outputs=Output_)
+
 
 model.compile(
-    optimizer= Adam(learning_rate=1E-4),
+    optimizer= "adam",
     metrics=['accuracy'],
-    # loss=losses.MeanSquaredError()
-    loss= 'mse'
+    loss='mse'
 )
+# model.compile(
+#     optimizer= Adam(learning_rate=1E-4),
+#     metrics=['accuracy'],
+#     # loss=losses.MeanSquaredError()
+#     loss= 'mse'
+# )
 print(model.summary())
 
-model.fit(X, Y, batch_size=batch_size,epochs=epochs, validation_split=0.1)
+model.fit(X, Y, batch_size=batch_size,epochs=epochs, validation_split=0.1, shuffle=True)
 
-model.save("lab_colorization_cnn.model")
+model.save("lab_colorization_cnn_v3.model")

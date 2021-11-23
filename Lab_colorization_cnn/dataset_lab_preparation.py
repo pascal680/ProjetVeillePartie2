@@ -43,21 +43,22 @@ def rgb_to_lab(list_images):
     y_train = []
 
     for img in list_images:
-        img_lab = cv2.resize(img, (RESOLUTION, RESOLUTION))
-        img_lab = cv2.cvtColor(img_lab, cv2.COLOR_RGB2Lab)
+        img = cv2.resize(img, (RESOLUTION, RESOLUTION))
+        img_lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
         # print(img_lab.shape)
 
         # print(img_lab.shape, "resized shape")
 
         # print(img_lab[:,:,1])
 
-        img_l = img_lab[:, :, 0]
+        img_l = img_lab[:, :, 0]/ 256
 
         img_ab = img_lab[:, :, 1:]
 
         img_ab = img_ab/128 -1
 
-        # print(img_ab[:, :, 1])
+        # print(img_l[:, :])
+        # print(np.array(img_l).shape)
 
         x_train.append(img_l)
         y_train.append(img_ab)
@@ -68,7 +69,7 @@ def rgb_to_lab(list_images):
 
 
 
-images = load_images_from_folder(DATADIR, 960)
+images = load_images_from_folder(DATADIR, 60)
 print(len(images))
 x_train, y_train = rgb_to_lab(images)
 

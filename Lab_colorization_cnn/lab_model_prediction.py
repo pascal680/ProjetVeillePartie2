@@ -4,7 +4,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow import keras
 
-model = keras.models.load_model("lab_colorization_cnn.model")
+model = keras.models.load_model("lab_colorization_cnn_v3.model")
 # img = cv2.imread("./00000115.jpg")
 img = cv2.imread("../../dataset/nature_images/00000013_(6).jpg")
 
@@ -26,12 +26,12 @@ img_l = img_lab[:, :, 0]
 
 # l = img_lab[:, :, 0]
 
-img = img_l.reshape((1, 256, 256, 1))
+img = img_l[np.newaxis,:,:,np.newaxis]
 
 result = model.predict(img)
 
-result = tf.cast(result[0, :, :, :], dtype=tf.float32).numpy() * 255.0
-result = np.concatenate((img_l.reshape((256,256,1)) * 255.0, result), axis=-1)
+result = (tf.cast(result[0, :, :, :], dtype=tf.float32).numpy()+1) * 128
+result = np.concatenate((img_l[:,:,np.newaxis] * 256.0, result), axis=-1)
 
 print(result.shape)
 
