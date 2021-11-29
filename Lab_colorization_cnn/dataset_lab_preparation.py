@@ -2,12 +2,61 @@ import os
 import cv2
 import numpy as np
 
-RESOLUTION = 256
+RESOLUTION = 384
 
-DATADIR = "B:/SCHOOL/AL/sem_9/veille_techno/partie2/dataset/nature_images/train"
+DATADIR = "B:/SCHOOL/AL/sem_9/veille_techno/partie2/dataset/nature_images/hand_picked"
+patch_size = 256
+stride = 32
+
+
+
+def data_augmentation(img, mode=0):
+    if mode == 0:
+        return img
+    elif mode == 1:
+        return np.flipud(img)
+    elif mode == 2:
+        return np.rot90(img)
+    elif mode == 3:
+        return np.flipud(np.rot90(img))
+    elif mode == 4:
+        return np.rot90(img, k=2)
+    elif mode == 5:
+        return np.flipud(np.rot90(img, k=2))
+    elif mode == 6:
+        return np.rot90(img, k=3)
+    elif mode == 7:
+        return np.flipud(np.rot90(img, k=3))
+
+
+def generate_patches(file_name):
+    img = cv2.imread(file_name)
+
+    h, w = img.shape[:2]
+
+    patches = []
+
+    if h > RESOLUTION and w > RESOLUTION:
+        h_c = int((h - RESOLUTION) * 0.5)
+        w_c = int((w - RESOLUTION) * 0.5)
+
+        top, left = h_c, w_c
+        bottom, right = h_c + RESOLUTION, w_c + RESOLUTION
+
+        img = img[top:bottom, left:right]
+
+        h, w = img.shape[:2]
+
+        for i in range(0, h - patch_size + 1, stride):
+            for j in range(0, w - patch_size + 1, stride):
+                x = img[i:i + patch_size, j:j + patch_size]
+
+                patches.append(data_augmentation(x, np.random.randint(0, 8)))
+
+    return patches
+
 
 def load_images_from_folder(directory, max_count = -1): #Va chercher les images du dataset et les convertit en image array rgb
-
     images = []
 
     counter = 0
@@ -25,29 +74,22 @@ def load_images_from_folder(directory, max_count = -1): #Va chercher les images 
 
         if os.path.exists(path):    #Verifie si l'image au path designer existe
 
-            img = cv2.imread(path)  #Convertit l'image RGB en image array RGB
+            patches = generate_patches(path)  #Convertit l'image RGB en image array RGB
+            counter += 1
+            for patch in patches:
+                images.append(patch) #Ajoute la RGB image Array a la liste de retour
 
-            if img is not None: #Juste un check pour eviter des problemes
-
-                height, width, channels = img.shape
-                if height > RESOLUTION and width > RESOLUTION:
-
-                    images.append(img) #Ajoute la RGB image Array a la liste de retour
-
-                    counter+= 1
 
     return images   #Retour la liste d"image array de tous les elements du dataset, jusqu'au max count
+
 
 def rgb_to_lab(list_images):
     x_train = []
     y_train = []
 
     for img in list_images:
-        img = cv2.resize(img, (RESOLUTION, RESOLUTION))
         img_lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
         # print(img_lab.shape)
-
-        # print(img_lab.shape, "resized shape")
 
         # print(img_lab[:,:,1])
 
@@ -69,7 +111,7 @@ def rgb_to_lab(list_images):
 
 
 
-images = load_images_from_folder(DATADIR, 256)
+images = load_images_from_folder(DATADIR, 22)
 print(len(images))
 x_train, y_train = rgb_to_lab(images)
 

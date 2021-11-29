@@ -1,18 +1,11 @@
-import keras.optimizers
-import tensorflow as tf
 from keras import Input
 from keras.layers import Conv2D, LeakyReLU, BatchNormalization, MaxPooling2D, UpSampling2D, Dropout, Concatenate
-from keras.optimizer_v2.adam import Adam
-from numpy import concatenate
-from tensorflow.keras.models import Sequential
-from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras import losses, optimizers
-from matplotlib import pyplot as plt
 import numpy as np
-import cv2
 import pickle
-RESOLUTION =256
+
+RESOLUTION = 256
 
 X = pickle.load(open("X.pickle", "rb"))
 X = np.array(X).reshape((-1, RESOLUTION, RESOLUTION, 1))
@@ -20,38 +13,39 @@ Y = pickle.load(open("Y.pickle", "rb"))
 Y = np.array(Y).reshape((-1, RESOLUTION, RESOLUTION, 2))
 
 depth = 12
-epochs = 1500
-batch_size = 8
+epochs = 2000
+batch_size = 16
+
+
 
 def InstantiateModel(in_):
-    encoder_ = Conv2D(32, (3, 3), padding='same', activation="relu", strides=2, use_bias=False)(in_)
+    encoder_ = Conv2D(32, (3, 3), padding='same', activation="relu", use_bias=False)(in_)
+    encoder_ = Conv2D(32, (3, 3), padding='same', activation="relu", strides=(2, 2), use_bias=False)(encoder_)
     encoder_ = BatchNormalization()(encoder_)
-    encoder_ = Conv2D(32, (3, 3), padding='same', activation="relu", strides=1, use_bias=False)(encoder_)
+    encoder_ = Conv2D(64, (3, 3), padding='same', activation="relu", use_bias=False)(encoder_)
+    encoder_ = Conv2D(64, (3, 3), padding='same', activation="relu", strides=(2, 2), use_bias=False)(encoder_)
     encoder_ = BatchNormalization()(encoder_)
-    encoder_ = Conv2D(64, (3, 3), padding='same', activation="relu", strides=2, use_bias=False)(encoder_)
-    encoder_ = BatchNormalization()(encoder_)
-    encoder_ = Conv2D(64, (3, 3), padding='same', activation="relu", strides=1, use_bias=False)(encoder_)
-    encoder_ = BatchNormalization()(encoder_)
-    encoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", strides=2, use_bias=False)(encoder_)
-    encoder_ = BatchNormalization()(encoder_)
-    encoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", strides=1, use_bias=False)(encoder_)
+    encoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", use_bias=False)(encoder_)
+    encoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", use_bias=False)(encoder_)
+    encoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", strides=(2, 2), use_bias=False)(encoder_)
     encoder_ = BatchNormalization()(encoder_)
 
-    encoder_ = Conv2D(256, (3, 3), padding='same', activation="relu", strides=1, use_bias=False)(encoder_)
-    encoder_ = BatchNormalization()(encoder_)
-
-    decoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", strides=1, use_bias=False)(encoder_)
-    decoder_ = BatchNormalization()(decoder_)
-    decoder_ = UpSampling2D((2,2))(decoder_)
-    decoder_ = Conv2D(64, (3, 3), padding='same', activation="relu", strides=1, use_bias=False)(decoder_)
-    decoder_ = BatchNormalization()(decoder_)
-    decoder_ = UpSampling2D((2,2))(decoder_)
-    decoder_ = Conv2D(32, (3, 3), padding='same', activation="relu", strides=1, use_bias=False)(decoder_)
-    decoder_ = BatchNormalization()(decoder_)
+    decoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", use_bias=False)(encoder_)
+    decoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", use_bias=False)(decoder_)
+    decoder_ = Conv2D(128, (3, 3), padding='same', activation="relu", use_bias=False)(decoder_)
     decoder_ = UpSampling2D((2, 2))(decoder_)
-    decoder_ = Conv2D(16, (3, 3), padding='same', activation="relu", strides=1, use_bias=False)(decoder_)
     decoder_ = BatchNormalization()(decoder_)
 
+    decoder_ = Conv2D(64, (3, 3), padding='same', activation="relu", use_bias=False)(decoder_)
+    decoder_ = Conv2D(64, (3, 3), padding='same', activation="relu", use_bias=False)(decoder_)
+    decoder_ = Conv2D(64, (3, 3), padding='same', activation="relu", use_bias=False)(decoder_)
+    decoder_ = UpSampling2D((2, 2))(decoder_)
+    decoder_ = BatchNormalization()(decoder_)
+    decoder_ = Conv2D(32, (3, 3), padding='same', activation="relu", use_bias=False)(decoder_)
+    decoder_ = Conv2D(32, (3, 3), padding='same', activation="relu", use_bias=False)(decoder_)
+    decoder_ = Conv2D(32, (3, 3), padding='same', activation="relu", use_bias=False)(decoder_)
+    decoder_ = UpSampling2D((2, 2))(decoder_)
+    decoder_ = BatchNormalization()(decoder_)
 
     # fusion = Concatenate()([decoder_, in_])
     #
@@ -60,19 +54,18 @@ def InstantiateModel(in_):
 
     output = Conv2D(2, 1, activation='tanh', padding='same', strides=1)(decoder_)
 
-
-
     return output
+
 
 # model = colorizer_model(depth)
 
-Input_Sample = Input(shape=(None, None,1))
+
+Input_Sample = Input(shape=(None, None, 1))
 Output_ = InstantiateModel(Input_Sample)
 model = Model(inputs=Input_Sample, outputs=Output_)
 
-
 model.compile(
-    optimizer= optimizers.RMSprop(learning_rate=0.001),
+    optimizer='adam',
     metrics=['accuracy'],
     loss='mse'
 )
@@ -84,6 +77,6 @@ model.compile(
 # )
 print(model.summary())
 
-model.fit(X, Y, batch_size=batch_size,epochs=epochs, validation_split=0.1, shuffle=True)
+model.fit(X, Y, batch_size=batch_size, epochs=epochs, validation_split=0.2, shuffle=True)
 
-model.save("lab_colorization_cnn_v5.model")
+model.save("lab_colorization_cnn_v7.model")
